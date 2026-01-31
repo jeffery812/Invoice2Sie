@@ -1,0 +1,74 @@
+body {
+  margin: 0;
+  padding: 16px;
+  font-family: "Segoe UI", Arial, sans-serif;
+  width: 320px;
+  color: #1d1d1f;
+  background: #f7f7f9;
+}
+
+h1 {
+  font-size: 18px;
+  margin: 0 0 8px;
+}
+
+p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.field {
+  display: block;
+  margin: 12px 0;
+  font-size: 13px;
+}
+
+.field span {
+  display: block;
+  margin-bottom: 6px;
+  color: #444;
+}
+
+button {
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: #1b72e8;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: #9cbaf0;
+  cursor: not-allowed;
+}
+
+textarea,
+input[type="password"],
+input[type="text"] {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d0d0dc;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 12px;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #fff;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.status {
+  margin-top: 12px;
+  padding: 8px;
+  background: #fff;
+  border: 1px solid #e1e1e8;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: pre-wrap;
+  min-height: 48px;
+}

@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "Invoice2SIE",
+  "version": "0.1.0",
+  "description": "Parse Swedish PDF invoices and generate SIE files.",
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Invoice2SIE"
+  },
+  "background": {
+    "service_worker": "background/service_worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content/content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "permissions": [
+    "activeTab",
+    "contextMenus",
+    "storage",
+    "downloads"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "vendor/pdfjs/pdf.worker.mjs"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}

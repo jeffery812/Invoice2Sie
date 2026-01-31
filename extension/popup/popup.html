@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Invoice2SIE</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Invoice2SIE</h1>
+      <label class="field">
+        <span>选择 PDF</span>
+        <input id="pdf-input" type="file" accept="application/pdf" />
+      </label>
+      <label class="field">
+        <span>Gemini API Key（本地存储）</span>
+        <input id="api-key" type="password" placeholder="输入后点击保存" />
+      </label>
+      <button id="save-key-btn" type="button">保存 API Key</button>
+      <button id="parse-btn" type="button">解析 PDF</button>
+      <label class="field">
+        <span>字段 JSON（可手动修改）</span>
+        <textarea id="fields-json" rows="10" spellcheck="false"></textarea>
+      </label>
+      <button id="generate-btn" type="button">生成 SIE 并下载</button>
+      <pre id="status" class="status" aria-live="polite"></pre>
+    </main>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

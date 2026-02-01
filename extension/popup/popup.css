@@ -2,6 +2,7 @@ body {
   margin: 0;
   padding: 16px;
   width: 340px;
+  min-height: 800px;
   font-family: "IBM Plex Sans", "Segoe UI", Arial, sans-serif;
   color: #151515;
   background: radial-gradient(circle at top, #f6f4ff 0%, #f2f7ff 45%, #f7f7f9 100%);

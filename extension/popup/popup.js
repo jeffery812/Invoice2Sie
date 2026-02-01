@@ -101,6 +101,17 @@ function scheduleModelRefresh(apiKey) {
   }, 500);
 }
 
+async function saveConfigPartial(partialConfig) {
+  const stored = await getFromStorage([DEFAULT_CONFIG.configStorageKey]);
+  const current = stored[DEFAULT_CONFIG.configStorageKey] || {};
+  await setInStorage({
+    [DEFAULT_CONFIG.configStorageKey]: {
+      ...current,
+      ...partialConfig
+    }
+  });
+}
+
 async function saveApiKey() {
   if (!apiKeyEl || !saveKeyBtn || !apiModelEl) {
     return;
@@ -181,6 +192,19 @@ if (apiKeyEl) {
     const apiKey = apiKeyEl.value.trim();
     if (apiKey.length > 10) {
       scheduleModelRefresh(apiKey);
+    }
+  });
+}
+
+if (apiModelEl) {
+  apiModelEl.addEventListener("change", async () => {
+    const model = apiModelEl.value;
+    if (!model) return;
+    try {
+      await saveConfigPartial({ aiModel: model });
+      setStatus(`Model saved: ${model}`);
+    } catch (error) {
+      setStatus(`Failed to save model: ${error?.message || error}`);
     }
   });
 }

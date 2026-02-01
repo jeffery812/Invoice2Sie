@@ -30,6 +30,10 @@
 
 ## 📦 Packaging for Sharing
 
+### Command difference (`pack` vs `release:pack`)
+- `npm run pack`: packages the current built output only; does not change version.
+- `npm run release:pack`: prompts for version strategy (keep/patch/minor/major), updates version in `extension/manifest.json` and `package.json`, then builds and packages automatically.
+
 ### Quick package (keep current version)
 1. Build and package:
    - `npm run build`

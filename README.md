@@ -21,8 +21,6 @@
 3. Click **"Create API key in new project"**.
 4. Copy the key and paste it into the Extension's settings.
 
-*Note: For enterprise users who prefer Google Cloud Console, see [Advanced Setup](docs/setup-gcp.md).*
-
 ## 🚀 Installation (Developer Mode)
 1. **Build**: `npm run build`
 2. **Load**: Go to `edge://extensions`, enable "Developer mode", and click "Load unpacked".

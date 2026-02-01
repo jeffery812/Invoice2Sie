@@ -10,8 +10,12 @@ export const DEFAULT_CONFIG = {
   expenseAccount: "4010",
   voucherSeries: "A",
   fiscalYear: new Date().getFullYear(),
+  fiscalYearStart: "",
+  fiscalYearEnd: "",
+  includeSupplierDetailsInVer: false,
   apiKeyStorageKey: "geminiApiKey",
   configStorageKey: "invoice2sieConfig",
+  aiModel: "",
   aiMaxTextLength: 12000,
   aiTimeoutMs: 20000,
   confidenceThreshold: 0.8

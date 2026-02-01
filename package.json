@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.js",
-    "pack": "node scripts/pack.js"
+    "pack": "node scripts/pack.js",
+    "release:pack": "node scripts/release_pack.js"
   },
   "description": "",
   "main": "index.js",

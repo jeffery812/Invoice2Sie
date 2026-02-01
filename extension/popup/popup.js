@@ -8,6 +8,10 @@ import { validateTransBalance } from "../../src/sie/validator.js";
 
 const inputEl = document.getElementById("pdf-input");
 const apiKeyEl = document.getElementById("api-key");
+const apiModelEl = document.getElementById("api-model");
+const fiscalStartEl = document.getElementById("fiscal-start");
+const fiscalEndEl = document.getElementById("fiscal-end");
+const includeSupplierDetailsEl = document.getElementById("include-supplier-details");
 const saveKeyBtn = document.getElementById("save-key-btn");
 const parseBtn = document.getElementById("parse-btn");
 const generateBtn = document.getElementById("generate-btn");
@@ -15,6 +19,10 @@ const fieldsEl = document.getElementById("fields-json");
 const statusEl = document.getElementById("status");
 
 function setStatus(message) {
+  if (!statusEl) {
+    console.warn("status element missing:", message);
+    return;
+  }
   statusEl.textContent = message;
 }
 
@@ -26,40 +34,180 @@ function readFields() {
   try {
     return JSON.parse(fieldsEl.value);
   } catch (error) {
-    throw new Error("字段 JSON 解析失败，请检查格式。");
+    throw new Error("Fields JSON parse failed. Please check the format.");
   }
+}
+
+let modelFetchTimer = null;
+
+function setModelOptions(models, selected) {
+  if (!apiModelEl) return;
+  apiModelEl.innerHTML = "";
+  if (!models.length) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "No available models";
+    apiModelEl.appendChild(option);
+    return;
+  }
+  for (const name of models) {
+    const option = document.createElement("option");
+    option.value = name;
+    option.textContent = name;
+    if (selected && selected === name) {
+      option.selected = true;
+    }
+    apiModelEl.appendChild(option);
+  }
+}
+
+async function fetchModels(apiKey) {
+  if (!apiKey) {
+    setModelOptions([], "");
+    return;
+  }
+  setStatus("Loading model list...");
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
+    );
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Model list fetch failed: ${response.status} ${errorText}`);
+    }
+    const data = await response.json();
+    const models = (data.models || [])
+      .filter((model) => Array.isArray(model.supportedGenerationMethods))
+      .filter((model) => model.supportedGenerationMethods.includes("generateContent"))
+      .map((model) => model.name || "")
+      .filter(Boolean)
+      .map((name) => (name.startsWith("models/") ? name.slice("models/".length) : name));
+    const stored = await getFromStorage([DEFAULT_CONFIG.configStorageKey]);
+    const storedConfig = stored[DEFAULT_CONFIG.configStorageKey] || {};
+    setModelOptions(models, storedConfig.aiModel);
+    setStatus("Model list updated.");
+  } catch (error) {
+    setModelOptions([], "");
+    setStatus(error?.message || "Model list fetch failed.");
+  }
+}
+
+function scheduleModelRefresh(apiKey) {
+  if (modelFetchTimer) {
+    clearTimeout(modelFetchTimer);
+  }
+  modelFetchTimer = setTimeout(() => {
+    fetchModels(apiKey);
+  }, 500);
 }
 
 async function saveApiKey() {
-  const apiKey = apiKeyEl.value.trim();
-  if (!apiKey) {
-    setStatus("API Key 不能为空。");
+  if (!apiKeyEl || !saveKeyBtn || !apiModelEl) {
     return;
   }
-  await setInStorage({ [DEFAULT_CONFIG.apiKeyStorageKey]: apiKey });
-  setStatus("API Key 已保存。");
+  const apiKey = apiKeyEl.value.trim();
+  const model = apiModelEl.value;
+  const fiscalYearStart = fiscalStartEl?.value || "";
+  const fiscalYearEnd = fiscalEndEl?.value || "";
+  const includeSupplierDetailsInVer = Boolean(includeSupplierDetailsEl?.checked);
+  if (!apiKey) {
+    setStatus("API Key is required.");
+    return;
+  }
+  if (!model) {
+    setStatus("Model name is required.");
+    return;
+  }
+  saveKeyBtn.disabled = true;
+  setStatus("Saving...");
+  try {
+    await setInStorage({
+      [DEFAULT_CONFIG.apiKeyStorageKey]: apiKey,
+      [DEFAULT_CONFIG.configStorageKey]: {
+        aiModel: model,
+        fiscalYearStart,
+        fiscalYearEnd,
+        includeSupplierDetailsInVer
+      }
+    });
+    apiKeyEl.value = "";
+    apiKeyEl.placeholder = "Saved (hidden for security)";
+    setStatus("API Key and model saved to chrome.storage.local.");
+    scheduleModelRefresh(apiKey);
+  } catch (error) {
+    setStatus(`Save failed: ${error?.message || error}`);
+  } finally {
+    saveKeyBtn.disabled = false;
+  }
 }
 
-saveKeyBtn.addEventListener("click", saveApiKey);
+if (saveKeyBtn) {
+  saveKeyBtn.addEventListener("click", saveApiKey);
+}
+
+async function initPopup() {
+  console.info("Invoice2SIE popup loaded.");
+  setStatus("Popup loaded.");
+  const stored = await getFromStorage([
+    DEFAULT_CONFIG.apiKeyStorageKey,
+    DEFAULT_CONFIG.configStorageKey
+  ]);
+  if (stored[DEFAULT_CONFIG.apiKeyStorageKey]) {
+    apiKeyEl.placeholder = "Saved (hidden for security)";
+    setStatus("Saved API Key detected.");
+    scheduleModelRefresh(stored[DEFAULT_CONFIG.apiKeyStorageKey]);
+  } else {
+    apiKeyEl.placeholder = "Enter and save";
+  }
+  const storedConfig = stored[DEFAULT_CONFIG.configStorageKey] || {};
+  if (storedConfig.aiModel) {
+    apiModelEl.value = storedConfig.aiModel;
+  }
+  if (fiscalStartEl) {
+    fiscalStartEl.value = storedConfig.fiscalYearStart || "";
+  }
+  if (fiscalEndEl) {
+    fiscalEndEl.value = storedConfig.fiscalYearEnd || "";
+  }
+  if (includeSupplierDetailsEl) {
+    includeSupplierDetailsEl.checked = Boolean(storedConfig.includeSupplierDetailsInVer);
+  }
+}
+
+initPopup();
+
+if (apiKeyEl) {
+  apiKeyEl.addEventListener("input", () => {
+    const apiKey = apiKeyEl.value.trim();
+    if (apiKey.length > 10) {
+      scheduleModelRefresh(apiKey);
+    }
+  });
+}
 
 parseBtn.addEventListener("click", async () => {
   const file = inputEl.files?.[0];
   if (!file) {
-    setStatus("请先选择 PDF 文件。");
+    setStatus("Please select a PDF file.");
     return;
   }
 
   parseBtn.disabled = true;
-  setStatus("解析中...");
+  setStatus("Parsing...");
+  console.info("Parse clicked:", {
+    fileName: file.name,
+    fileSize: file.size
+  });
   try {
     const result = await parsePdfFile(file);
+    console.info("PDF parse result:", result);
     if (result.error) {
       setStatus(result.error);
       return;
     }
 
     if (result.needsOcr) {
-      setStatus("未检测到文本层，建议 OCR 或手动录入。");
+      setStatus("No text layer detected. Use OCR or manual input.");
       setFields(JSON.stringify({ fields: {}, confidence: {}, trace: {} }, null, 2));
       return;
     }
@@ -68,18 +216,28 @@ parseBtn.addEventListener("click", async () => {
       DEFAULT_CONFIG.apiKeyStorageKey,
       DEFAULT_CONFIG.configStorageKey
     ]);
-    const apiKey = stored[DEFAULT_CONFIG.apiKeyStorageKey];
+    let apiKey = stored[DEFAULT_CONFIG.apiKeyStorageKey];
     const config = mergeConfig(stored[DEFAULT_CONFIG.configStorageKey] || {});
 
+    if (!apiKey && apiKeyEl?.value?.trim()) {
+      apiKey = apiKeyEl.value.trim();
+      setStatus("Using current API Key (not saved).");
+    }
     if (!apiKey) {
-      setStatus("未找到 API Key，请先保存后再解析。");
+      setStatus("API Key not found. Save it before parsing.");
+      return;
+    }
+    const selectedModel = apiModelEl?.value || "";
+    const modelToUse = config.aiModel || selectedModel;
+    if (!modelToUse) {
+      setStatus("Model not set. Save or select a model first.");
       return;
     }
 
     let aiInput = result.rawText;
     if (aiInput.length > config.aiMaxTextLength) {
       aiInput = aiInput.slice(0, config.aiMaxTextLength);
-      setStatus("文本过长，已截断后再发送至 AI。");
+      setStatus("Text too long. Truncated before sending to AI.");
     }
 
     const controller = new AbortController();
@@ -89,18 +247,20 @@ parseBtn.addEventListener("click", async () => {
       aiResult = await extractFields({
         rawText: aiInput,
         apiKey,
+        model: modelToUse,
         signal: controller.signal
       });
     } finally {
       clearTimeout(timeout);
     }
+    console.info("AI extraction result:", aiResult);
     const finalResult = postProcessExtraction(aiResult, config.confidenceThreshold);
     setFields(JSON.stringify(finalResult, null, 2));
     if (result.rawText.length <= config.aiMaxTextLength) {
-      setStatus(`解析完成。文本长度：${result.rawText.length}`);
+      setStatus(`Parsing complete. Text length: ${result.rawText.length}`);
     }
   } catch (error) {
-    setStatus(`解析失败：${error?.message || error}`);
+    setStatus(`Parsing failed: ${error?.message || error}`);
   } finally {
     parseBtn.disabled = false;
   }
@@ -123,7 +283,7 @@ generateBtn.addEventListener("click", async () => {
     });
 
     if (!validateTransBalance(sie)) {
-      setStatus("SIE 借贷不平，已阻止导出。");
+      setStatus("SIE is not balanced. Export blocked.");
       return;
     }
 
@@ -138,9 +298,9 @@ generateBtn.addEventListener("click", async () => {
       filename: name,
       saveAs: true
     });
-    setStatus("SIE 已生成并触发下载。");
+    setStatus("SIE generated and download triggered.");
   } catch (error) {
-    setStatus(`生成失败：${error?.message || error}`);
+    setStatus(`Generation failed: ${error?.message || error}`);
   } finally {
     generateBtn.disabled = false;
   }

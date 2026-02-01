@@ -8,22 +8,64 @@
   </head>
   <body>
     <main>
-      <h1>Invoice2SIE</h1>
-      <label class="field">
-        <span>选择 PDF</span>
-        <input id="pdf-input" type="file" accept="application/pdf" />
-      </label>
-      <label class="field">
-        <span>Gemini API Key（本地存储）</span>
-        <input id="api-key" type="password" placeholder="输入后点击保存" />
-      </label>
-      <button id="save-key-btn" type="button">保存 API Key</button>
-      <button id="parse-btn" type="button">解析 PDF</button>
-      <label class="field">
-        <span>字段 JSON（可手动修改）</span>
+      <header class="hero">
+        <h1>Invoice2SIE</h1>
+        <p>Parse Swedish invoices and generate SIE vouchers</p>
+      </header>
+
+      <section class="card">
+        <h2>Account & Model</h2>
+        <div class="stack">
+          <label class="field">
+            <span>Gemini API Key (stored locally)</span>
+            <div class="inline">
+              <input id="api-key" type="password" placeholder="Enter and save" />
+              <button id="save-key-btn" type="button" class="secondary">Save</button>
+            </div>
+          </label>
+          <label class="field">
+            <span>Gemini Model</span>
+            <select id="api-model">
+              <option value="">Save API Key first</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Invoice & Parsing</h2>
+        <div class="stack">
+          <label class="field">
+            <span>Select PDF</span>
+            <input id="pdf-input" type="file" accept="application/pdf" />
+          </label>
+          <button id="parse-btn" type="button">Parse PDF</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Voucher Settings</h2>
+        <div class="stack">
+          <label class="field">
+            <span>Fiscal year start/end (#RAR, optional)</span>
+            <div class="inline">
+              <input id="fiscal-start" type="date" />
+              <input id="fiscal-end" type="date" />
+            </div>
+          </label>
+          <label class="field toggle">
+            <input id="include-supplier-details" type="checkbox" />
+            <span>Append supplier VAT/OrgNr/address to #VER description</span>
+          </label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Fields JSON (editable)</h2>
         <textarea id="fields-json" rows="10" spellcheck="false"></textarea>
-      </label>
-      <button id="generate-btn" type="button">生成 SIE 并下载</button>
+        <button id="generate-btn" type="button">Generate SIE & Download</button>
+      </section>
+
       <pre id="status" class="status" aria-live="polite"></pre>
     </main>
     <script type="module" src="popup.js"></script>

@@ -10,9 +10,12 @@ function extractJsonBlock(text) {
   return JSON.parse(jsonText);
 }
 
-export async function extractFields({ rawText, apiKey, model = "gemini-1.5-flash", signal }) {
+export async function extractFields({ rawText, apiKey, model, signal }) {
   if (!apiKey) {
     throw new Error("Missing Gemini API key.");
+  }
+  if (!model) {
+    throw new Error("Missing Gemini model name.");
   }
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
